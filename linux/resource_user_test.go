@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccUserCreation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: userConfig,
@@ -26,8 +26,8 @@ func TestAccUserCreation(t *testing.T) {
 
 func TestAccSystemUserCreation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: systemUserConfig,
@@ -48,8 +48,8 @@ func TestAccSystemUserCreation(t *testing.T) {
 
 func TestAccUserWithUIDCreation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: userWithUIDConfig,
@@ -71,8 +71,8 @@ func TestAccUserWithUIDCreation(t *testing.T) {
 
 func TestAccUserWithGroupsCreation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: userWithShellConfig,
@@ -97,8 +97,8 @@ func TestAccUserWithGroupsCreation(t *testing.T) {
 
 func TestAccUserWithGroupCreation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: userWithGroupConfig,
@@ -132,8 +132,8 @@ func TestAccUserWithGroupCreation(t *testing.T) {
 
 func TestAccUserUpdation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
 			client := testAccProvider.Meta().(*Client)
 			return deleteGroup(client, "testuser") // changing testuser's name leaves this group dangling

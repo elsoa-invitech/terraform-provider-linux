@@ -4,8 +4,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+func NewProvider() *schema.Provider {
+	return Provider()
+}
 
 func Provider() *schema.Provider {
 	return &schema.Provider{

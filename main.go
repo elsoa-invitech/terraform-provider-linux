@@ -1,16 +1,20 @@
 package main
 
 import (
+	"flag"
 	"github.com/mavidser/terraform-provider-linux/linux"
 
-	"github.com/hashicorp/terraform/plugin"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 )
 
 func main() {
+	var debugMode bool
+
+	flag.BoolVar(&debugMode, "debuggable", false, "set to true to run the provider with support for debuggers like delve")
+	flag.Parse()
+
 	plugin.Serve(&plugin.ServeOpts{
-		ProviderFunc: func() terraform.ResourceProvider {
-			return linux.Provider()
-		},
+		ProviderFunc: linux.NewProvider,
+		Debug:        debugMode,
 	})
 }

@@ -1,19 +1,26 @@
 package linux
 
 import (
+	"context"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-var testAccProviders map[string]terraform.ResourceProvider
 var testAccProvider *schema.Provider
+var testAccProviderFactories = map[string]func() (*schema.Provider, error){
+	"linux": func() (*schema.Provider, error) {
+		return testAccProvider, nil
+	},
+}
 
 func init() {
 	testAccProvider = Provider()
-	testAccProviders = map[string]terraform.ResourceProvider{
-		"linux": testAccProvider,
+	testAccProviderFactories = map[string]func() (*schema.Provider, error){
+		"linux": func() (*schema.Provider, error) {
+			return testAccProvider, nil
+		},
 	}
 }
 
@@ -24,8 +31,9 @@ func TestProvider(t *testing.T) {
 }
 
 func testAccPreCheck(t *testing.T) {
-	err := testAccProvider.Configure(terraform.NewResourceConfig(nil))
-	if err != nil {
-		t.Fatal(err)
+	ctx := context.TODO()
+	diags := testAccProvider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
+	if diags.HasError() {
+		t.Fatal(diags[0].Summary)
 	}
 }

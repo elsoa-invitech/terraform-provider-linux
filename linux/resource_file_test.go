@@ -3,13 +3,13 @@ package linux
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccFileCreation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: fileCreationConfig,
@@ -24,8 +24,8 @@ func TestAccFileCreation(t *testing.T) {
 
 func TestAccFileWithContentCreation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: fileWithContentCreationConfig,
@@ -40,8 +40,8 @@ func TestAccFileWithContentCreation(t *testing.T) {
 
 func TestAccFileWithOwnerCreation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: fileWithOwnerCreationConfig,
@@ -57,8 +57,8 @@ func TestAccFileWithOwnerCreation(t *testing.T) {
 
 func TestAccFileWithPermissionsCreation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: fileWithPermissionsCreationConfig,
@@ -74,8 +74,8 @@ func TestAccFileWithPermissionsCreation(t *testing.T) {
 
 func TestAccFileWithAllAttrsCreation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: fileWithAllAttrsCreationConfig,
@@ -92,8 +92,8 @@ func TestAccFileWithAllAttrsCreation(t *testing.T) {
 
 func TestAccFileUpdation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: fileWithAllAttrsCreationConfig,

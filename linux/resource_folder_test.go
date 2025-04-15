@@ -3,13 +3,13 @@ package linux
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccFolderCreation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: folderCreationConfig,
@@ -24,8 +24,8 @@ func TestAccFolderCreation(t *testing.T) {
 
 func TestAccFolderWithOwnerCreation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: folderWithOwnerCreationConfig,
@@ -41,8 +41,8 @@ func TestAccFolderWithOwnerCreation(t *testing.T) {
 
 func TestAccFolderWithPermissionsCreation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: folderWithPermissionsCreationConfig,
@@ -58,8 +58,8 @@ func TestAccFolderWithPermissionsCreation(t *testing.T) {
 
 func TestAccFolderWithAllAttrsCreation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: folderWithAllAttrsCreationConfig,
@@ -76,8 +76,8 @@ func TestAccFolderWithAllAttrsCreation(t *testing.T) {
 
 func TestAccFolderUpdation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: folderWithAllAttrsCreationConfig,
