@@ -100,29 +100,34 @@ func getUserId(client *Client, name string) (int, error) {
 	return uid, nil
 }
 
-func getUserName(client *Client, uid int) (string, error) {
+func getUserFromID(client *Client, uid int) ([]string, error) {
 	command := fmt.Sprintf("getent passwd %d", uid)
 	stdout, _, err := runCommand(client, false, command, "")
 	if err != nil {
-		return "", errors.Wrap(err, fmt.Sprintf("Command failed: %s", command))
+		return nil, errors.Wrap(err, fmt.Sprintf("Command failed: %s", command))
 	}
 	if stdout == "" {
-		return "", fmt.Errorf("User not found with id %v", uid)
+		return nil, fmt.Errorf("User not found with id %v", uid)
 	}
-	name := strings.Split(stdout, ":")[0]
-	return name, nil
+	data := strings.Split(strings.TrimSpace(stdout), ":")
+	return data, nil
 }
 
-func getGroupIdForUser(client *Client, name string) (int, error) {
+func getUserFromName(client *Client, name string) ([]string, error) {
 	command := fmt.Sprintf("getent passwd %s", name)
 	stdout, _, err := runCommand(client, false, command, "")
 	if err != nil {
-		return 0, errors.Wrap(err, fmt.Sprintf("Command failed: %s", command))
+		return nil, errors.Wrap(err, fmt.Sprintf("Command failed: %s", command))
 	}
 	if stdout == "" {
-		return 0, fmt.Errorf("Group not found for user %v", name)
+		return nil, fmt.Errorf("User not found with name %v", name)
 	}
-	uid, err := strconv.Atoi(strings.TrimSpace(strings.Split(stdout, ":")[3]))
+	data := strings.Split(strings.TrimSpace(stdout), ":")
+	return data, nil
+}
+
+func getGroupIdForUser(_ *Client, details []string) (int, error) {
+	uid, err := strconv.Atoi(strings.TrimSpace(details[3]))
 	if err != nil {
 		return 0, err
 	}
@@ -135,13 +140,13 @@ func userResourceRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return errors.Wrap(err, "ID stored is not int")
 	}
-	name, err := getUserName(client, uid)
+	details, err := getUserFromID(client, uid)
 	if err != nil {
 		d.SetId("")
 		return nil
 	}
-	d.Set("name", name)
-	gid, err := getGroupIdForUser(client, name)
+	d.Set("name", details[0])
+	gid, err := getGroupIdForUser(client, details)
 	if err != nil {
 		return errors.Wrap(err, "Couldn't find group for user")
 	}
@@ -157,17 +162,17 @@ func userResourceUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	name := d.Get("name").(string)
 	gid := d.Get("gid").(int)
-	oldname, err := getUserName(client, uid)
+	old, err := getUserFromID(client, uid)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get user name")
 	}
-	oldgid, err := getGroupIdForUser(client, oldname)
+	oldgid, err := getGroupIdForUser(client, old)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get user gid")
 	}
 
-	if oldname != name {
-		command := fmt.Sprintf("/usr/sbin/usermod %s -l %s", oldname, name)
+	if old[0] != name {
+		command := fmt.Sprintf("/usr/sbin/usermod %s -l %s", old[0], name)
 		_, _, err = runCommand(client, true, command, "")
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("Command failed: %s", command))
@@ -190,12 +195,12 @@ func userResourceDelete(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return errors.Wrap(err, "ID stored is not int")
 	}
-	name, err := getUserName(client, uid)
+	details, err := getUserFromID(client, uid)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get user name")
 	}
 
-	command := fmt.Sprintf("/usr/sbin/userdel %s", name)
+	command := fmt.Sprintf("/usr/sbin/userdel %s", details[0])
 	_, _, err = runCommand(client, true, command, "")
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("Command failed: %s", command))

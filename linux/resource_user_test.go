@@ -176,7 +176,11 @@ func testAccCheckUID(username string, check func(int) error) resource.TestCheckF
 func testAccCheckGIDForUser(username string, check func(int) error) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := testAccProvider.Meta().(*Client)
-		gid, err := getGroupIdForUser(client, username)
+		details, err := getUserFromName(client, username)
+		if err != nil {
+			return err
+		}
+		gid, err := getGroupIdForUser(client, details)
 		if err != nil {
 			return err
 		}
