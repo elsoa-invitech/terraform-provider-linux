@@ -21,6 +21,24 @@ func userResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"shell": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "/bin/bash",
+			},
+			"home": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return new == "" || old == new
+				},
+			},
+			"create_home": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"uid": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -31,6 +49,14 @@ func userResource() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+			},
+			"groups": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return k == "groups.#" || new == ""
+				},
 			},
 			"system": &schema.Schema{
 				Type:     schema.TypeBool,
@@ -47,8 +73,16 @@ func userResourceCreate(d *schema.ResourceData, m interface{}) error {
 	uid := d.Get("uid").(int)
 	gid := d.Get("gid").(int)
 	system := d.Get("system").(bool)
+	home := d.Get("home").(string)
+	create_home := d.Get("create_home").(bool)
+	shell := d.Get("shell").(string)
+	groups := d.Get("groups").(*schema.Set).List()
+	groupsList := make([]string, len(groups))
+	for i, group := range groups {
+		groupsList[i] = group.(string)
+	}
 
-	err := createUser(client, name, uid, gid, system)
+	err := createUser(client, name, uid, gid, system, home, create_home, shell, groupsList)
 	if err != nil {
 		return errors.Wrap(err, "Couldn't create user")
 	}
@@ -64,14 +98,28 @@ func userResourceCreate(d *schema.ResourceData, m interface{}) error {
 	return userResourceRead(d, m)
 }
 
-func createUser(client *Client, name string, uid int, gid int, system bool) error {
+func createUser(client *Client, name string, uid int, gid int, system bool, home string, create_home bool, shell string, groups []string) error {
 	command := "/usr/sbin/useradd"
 
+	if len(home) > 0 {
+		command = fmt.Sprintf("%s --home-dir %s", command, home)
+	} else {
+		command = fmt.Sprintf("%s --home-dir /home/%s", command, name)
+	}
+	if create_home {
+		command = fmt.Sprintf("%s --create-home", command)
+	}
+	if len(shell) > 0 {
+		command = fmt.Sprintf("%s --shell %s", command, shell)
+	}
 	if uid > 0 {
 		command = fmt.Sprintf("%s --uid %d", command, uid)
 	}
 	if gid > 0 {
 		command = fmt.Sprintf("%s --gid %d", command, gid)
+	}
+	if len(groups) > 0 {
+		command = fmt.Sprintf("%s --groups %s", command, strings.Join(groups, ","))
 	}
 	if system {
 		command = fmt.Sprintf("%s --system", command)
@@ -134,6 +182,18 @@ func getGroupIdForUser(_ *Client, details []string) (int, error) {
 	return uid, nil
 }
 
+func getUserGroups(client *Client, name string) ([]string, error) {
+	command := fmt.Sprintf("id --name --groups %s", name)
+	stdout, _, err := runCommand(client, false, command, "")
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf("Command failed: %s", command))
+	}
+	if stdout == "" {
+		return nil, fmt.Errorf("User not found with name %v", name)
+	}
+	return strings.Split(strings.TrimSpace(stdout), " "), nil
+}
+
 func userResourceRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 	uid, err := strconv.Atoi(d.Id())
@@ -151,6 +211,13 @@ func userResourceRead(d *schema.ResourceData, m interface{}) error {
 		return errors.Wrap(err, "Couldn't find group for user")
 	}
 	d.Set("gid", gid)
+	d.Set("home", details[5])
+	d.Set("shell", details[6])
+	groups, err := getUserGroups(client, details[0])
+	if err != nil {
+		return errors.Wrap(err, "Couldn't find group for user")
+	}
+	d.Set("groups", groups)
 	return nil
 }
 

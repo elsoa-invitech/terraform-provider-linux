@@ -69,6 +69,32 @@ func TestAccUserWithUIDCreation(t *testing.T) {
 	})
 }
 
+func TestAccUserWithGroupsCreation(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: userWithShellConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("linux_user.testuser", "name", "testuser"),
+					resource.TestCheckResourceAttr("linux_user.testuser", "uid", "1024"),
+					resource.TestCheckResourceAttr("linux_user.testuser", "gid", "1024"),
+					resource.TestCheckResourceAttr("linux_user.testuser", "home", "/home/testuser2"),
+					//					resource.TestCheckResourceAttrSet("linux_user.testuser", "groups"),
+					resource.TestCheckResourceAttr("linux_user.testuser", "shell", "/bin/false"),
+					testAccCheckUID("testuser", func(uid int) error {
+						if uid != 1024 {
+							return fmt.Errorf("UID should be 1024")
+						}
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccUserWithGroupCreation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -205,6 +231,16 @@ resource "linux_user" "testuser" {
 	uid = 1024
 }
 `
+const userWithShellConfig = `
+resource "linux_user" "testuser" {
+	name = "testuser"
+	uid = 1024
+	home = "/home/testuser2"
+	shell = "/bin/false"
+	groups = ["backup"]
+}
+`
+
 const userWithGroupConfig = `
 resource "linux_group" "testgroup" {
 	name = "testgroup"
