@@ -245,32 +245,42 @@ func userResourceUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return errors.Wrap(err, "ID stored is not int")
 	}
-	name := d.Get("name").(string)
-	gid := d.Get("gid").(int)
 	old, err := getUserFromID(client, uid)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get user name")
 	}
-	oldgid, err := getGroupIdForUser(client, old)
+	command := "/usr/sbin/usermod"
+
+	if d.HasChange("name") {
+		command = fmt.Sprintf("%s --login %s", command, d.Get("name").(string))
+	}
+	if d.HasChange("gid") {
+		command = fmt.Sprintf("%s --gid %d", command, d.Get("gid").(int))
+	}
+	if d.HasChange("home") {
+		command = fmt.Sprintf("%s --move-home --home '%s'", command, d.Get("home").(string))
+	}
+	if d.HasChange("shell") {
+		command = fmt.Sprintf("%s --shell %s", command, d.Get("shell").(string))
+	}
+	if d.HasChange("comment") {
+		command = fmt.Sprintf("%s --comment '%s'", command, d.Get("comment").(string))
+	}
+	if d.HasChange("groups") {
+		groups := d.Get("groups").(*schema.Set).List()
+		groupsList := make([]string, len(groups))
+		for i, group := range groups {
+			groupsList[i] = group.(string)
+		}
+		command = fmt.Sprintf("%s --groups %s", command, strings.Join(groupsList, ","))
+	}
+
+	command = fmt.Sprintf("%s %s", command, old[0])
+	_, _, err = runCommand(client, true, command, "")
 	if err != nil {
-		return errors.Wrap(err, "Failed to get user gid")
+		return errors.Wrap(err, fmt.Sprintf("Command failed: %s", command))
 	}
 
-	if old[0] != name {
-		command := fmt.Sprintf("/usr/sbin/usermod %s -l %s", old[0], name)
-		_, _, err = runCommand(client, true, command, "")
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("Command failed: %s", command))
-		}
-	}
-
-	if oldgid != gid {
-		command := fmt.Sprintf("/usr/sbin/usermod %s -g %d", name, gid)
-		_, _, err = runCommand(client, true, command, "")
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("Command failed: %s", command))
-		}
-	}
 	return userResourceRead(d, m)
 }
 
