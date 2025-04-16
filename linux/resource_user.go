@@ -64,6 +64,10 @@ func userResource() *schema.Resource {
 					return k == "groups.#" || new == ""
 				},
 			},
+			"comment": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
 			"system": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -82,6 +86,7 @@ func userResourceCreate(d *schema.ResourceData, m interface{}) error {
 	uid := d.Get("uid").(int)
 	gid := d.Get("gid").(int)
 	system := d.Get("system").(bool)
+	comment := d.Get("comment").(string)
 	home := d.Get("home").(string)
 	create_home := d.Get("create_home").(bool)
 	shell := d.Get("shell").(string)
@@ -91,7 +96,7 @@ func userResourceCreate(d *schema.ResourceData, m interface{}) error {
 		groupsList[i] = group.(string)
 	}
 
-	err := createUser(client, name, uid, gid, system, home, create_home, shell, groupsList)
+	err := createUser(client, name, uid, gid, system, comment, home, create_home, shell, groupsList)
 	if err != nil {
 		return errors.Wrap(err, "Couldn't create user")
 	}
@@ -107,7 +112,7 @@ func userResourceCreate(d *schema.ResourceData, m interface{}) error {
 	return userResourceRead(d, m)
 }
 
-func createUser(client *Client, name string, uid int, gid int, system bool, home string, create_home bool, shell string, groups []string) error {
+func createUser(client *Client, name string, uid int, gid int, system bool, comment string, home string, create_home bool, shell string, groups []string) error {
 	command := "/usr/sbin/useradd"
 
 	if len(home) > 0 {
@@ -117,6 +122,9 @@ func createUser(client *Client, name string, uid int, gid int, system bool, home
 	}
 	if create_home {
 		command = fmt.Sprintf("%s --create-home", command)
+	}
+	if len(comment) > 0 {
+		command = fmt.Sprintf("%s --comment '%s'", command, comment)
 	}
 	if len(shell) > 0 {
 		command = fmt.Sprintf("%s --shell %s", command, shell)
@@ -220,6 +228,7 @@ func userResourceRead(d *schema.ResourceData, m interface{}) error {
 		return errors.Wrap(err, "Couldn't find group for user")
 	}
 	d.Set("gid", gid)
+	d.Set("comment", details[4])
 	d.Set("home", details[5])
 	d.Set("shell", details[6])
 	groups, err := getUserGroups(client, details[0])
