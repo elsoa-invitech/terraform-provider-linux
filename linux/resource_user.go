@@ -41,6 +41,9 @@ func userResource() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return old == "" || old == new
+				},
 			},
 			"uid": {
 				Type:     schema.TypeInt,
@@ -65,6 +68,9 @@ func userResource() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return old == "" || old == new
+				},
 			},
 		},
 	}
