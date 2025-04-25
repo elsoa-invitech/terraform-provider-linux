@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
@@ -27,27 +28,26 @@ type Client struct {
 
 func (c *Config) Client() (*Client, error) {
 	var auths []ssh.AuthMethod
-	var sshAgent net.Conn
-	keys := []ssh.Signer{}
 
 	if c.Password != "" {
 		auths = append(auths, ssh.Password(c.Password))
 	} else {
+		keys := []ssh.Signer{}
 		key, err := ioutil.ReadFile(c.PrivateKey)
-		if err != nil {
+		if err == nil {
+			signer, err := ssh.ParsePrivateKey(key)
+			if err == nil {
+				keys = append(keys, signer)
+			}
+		} else if !os.IsNotExist(err) || !strings.HasSuffix(c.PrivateKey, "/.ssh/id_rsa") {
 			return nil, err
 		}
 
-		if sshAgent, err = net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
+		if sshAgent, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
 			signers, err := agent.NewClient(sshAgent).Signers()
 			if err == nil {
 				keys = append(keys, signers...)
 			}
-		}
-
-		signer, err := ssh.ParsePrivateKey(key)
-		if err == nil {
-			keys = append(keys, signer)
 		}
 
 		auths = append(auths, ssh.PublicKeys(keys...))
